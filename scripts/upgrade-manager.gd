@@ -53,6 +53,9 @@ func start_install(config: InstallerConfig, version_info: Dictionary) -> void:
 			_fail("Failed to create install directory: " + config.install_dir)
 			return
 
+	# Clean up leftover backups from previous failed installs
+	RollbackManager.cleanup_backups(config.install_dir, _managed_files)
+
 	_set_phase(Phase.DOWNLOADING, "Downloading " + config.app_name + "...")
 	_start_download()
 
