@@ -16,6 +16,15 @@ extends Resource
 @export var version_check_url: String = ""
 @export var version_check_api_key: String = ""
 
+# Returns auth headers for authenticated downloads (e.g., Supabase Storage)
+func get_download_headers() -> PackedStringArray:
+	if version_check_api_key == "":
+		return []
+	return PackedStringArray([
+		"apikey: " + version_check_api_key,
+		"Authorization: Bearer " + version_check_api_key
+	])
+
 # --- Timeouts ---
 
 @export var success_timeout: float = 30.0

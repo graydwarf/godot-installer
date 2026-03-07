@@ -65,7 +65,7 @@ func _start_download() -> void:
 
 	var url = _manifest.get("download_url", "")
 	var size = _manifest.get("file_size_bytes", 0)
-	var err = _download_manager.start_download(url, size, _config.get_temp_dir())
+	var err = _download_manager.start_download(url, size, _config.get_temp_dir(), _config.get_download_headers())
 	if err != OK:
 		_fail("Failed to start download")
 
@@ -143,7 +143,7 @@ func _extract_zip(zip_path: String) -> void:
 	var reader = ZIPReader.new()
 	var err = reader.open(zip_path)
 	if err != OK:
-		_handle_extract_failure("Failed to open downloaded zip file")
+		_handle_extract_failure("Failed to open downloaded zip file (error " + str(err) + ")")
 		return
 
 	var files = reader.get_files()
@@ -161,8 +161,9 @@ func _extract_zip(zip_path: String) -> void:
 
 		var file = FileAccess.open(target_path, FileAccess.WRITE)
 		if file == null:
+			var open_err = FileAccess.get_open_error()
 			reader.close()
-			_handle_extract_failure("Failed to write file: " + target_path)
+			_handle_extract_failure("Failed to write file: " + target_path + " (error " + str(open_err) + ")")
 			return
 
 		file.store_buffer(content)
@@ -182,6 +183,7 @@ func _extract_zip(zip_path: String) -> void:
 	_launch_app()
 
 func _handle_extract_failure(error_msg: String) -> void:
+	_download_manager.cleanup_temp_dir()
 	# If we made backups, rollback
 	if _has_backups():
 		_set_phase(Phase.ROLLED_BACK, "Extraction failed, restoring backups...")

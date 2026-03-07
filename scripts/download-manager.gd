@@ -12,10 +12,12 @@ var _temp_path: String = ""
 var _expected_size: int = 0
 var _downloading: bool = false
 var _progress_timer: Timer
+var _headers: PackedStringArray = []
 
 # Starts downloading a file from url into temp_dir.
+# Optional headers for authenticated downloads.
 # Returns OK if download started, or an error code.
-func start_download(url: String, expected_size: int, temp_dir: String) -> Error:
+func start_download(url: String, expected_size: int, temp_dir: String, headers: PackedStringArray = []) -> Error:
 	if _downloading:
 		return ERR_BUSY
 
@@ -49,8 +51,10 @@ func start_download(url: String, expected_size: int, temp_dir: String) -> Error:
 	_progress_timer.timeout.connect(_poll_progress)
 	add_child(_progress_timer)
 
+	_headers = headers
+
 	# Start download
-	var err = _http_request.request(url)
+	var err = _http_request.request(url, _headers)
 	if err != OK:
 		download_failed.emit("Failed to start download: error " + str(err))
 		return err
