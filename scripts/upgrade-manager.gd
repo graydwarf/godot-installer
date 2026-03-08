@@ -30,12 +30,14 @@ var _file_lock_manager: FileLockManager
 var _success_poll_timer: Timer
 var _success_elapsed: float = 0.0
 var _managed_files: PackedStringArray = []
+var _is_upgrade: bool = false
 
 # Starts the upgrade process using the given config and manifest.
 func start_upgrade(config: InstallerConfig, manifest: Dictionary) -> void:
 	_config = config
 	_manifest = manifest
 	_managed_files = [config.exe_name, config.pck_name]
+	_is_upgrade = true
 
 	_set_phase(Phase.DOWNLOADING, "Downloading update...")
 	_start_download()
@@ -45,6 +47,7 @@ func start_install(config: InstallerConfig, version_info: Dictionary) -> void:
 	_config = config
 	_manifest = version_info
 	_managed_files = [config.exe_name, config.pck_name]
+	_is_upgrade = false
 
 	# Ensure install directory exists
 	if not DirAccess.dir_exists_absolute(config.install_dir):
@@ -213,14 +216,17 @@ func _launch_app() -> void:
 		_handle_launch_failure("Failed to launch " + _config.app_name)
 		return
 
-	# For first install, we're done
-	if not _has_backups():
+	# For install (even if overwriting existing files), we're done after launch
+	if not _is_upgrade:
+		# Clean up any backups created during overwrite-install
+		if _has_backups():
+			RollbackManager.cleanup_backups(_config.install_dir, _managed_files)
 		_set_phase(Phase.DONE, _config.app_name + " installed successfully!")
 		progress_updated.emit(100.0, "Installation complete!")
 		upgrade_completed.emit(true, _config.app_name + " has been installed and launched.")
 		return
 
-	# For upgrade, poll for success signal
+	# For upgrade, poll for success signal from the launched app
 	_set_phase(Phase.WAITING_FOR_SUCCESS, "Waiting for " + _config.app_name + " to confirm upgrade...")
 	_start_success_poll()
 
