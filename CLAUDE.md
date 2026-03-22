@@ -5,8 +5,8 @@ Reusable Godot 4.x addon for app installation, upgrades, and rollback. Platform:
 
 ## IMPORTANT: This is a shared submodule
 - This repo is used as a git submodule by two other projects:
-  - **`github.com/graydwarf/suganote`** — Main Suganote app
-  - **`github.com/graydwarf/suganote-installer`** — Standalone installer app
+  - **`github.com/graydwarf/sugabase`** — Main Sugabase app
+  - **`github.com/graydwarf/sugabase-installer`** — Standalone installer app
 - **All addon changes happen HERE** — never edit the addon in the consuming projects
 - After pushing changes here, each consuming project needs:
   ```bash
